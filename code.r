@@ -13,14 +13,30 @@ data<-rbind(data,dataSlimm)
 taxonomy <- data[,c("taxa_id","linage")]
 taxonomy<- taxonomy[!duplicated(taxonomy),]
 taxonomy$linage <- gsub("[|]",";",taxonomy$linage)
-
 colnames(taxonomy)<-c("Feature ID","Taxon")
+
+taxonomy$Taxon<-gsub("k__","D_0__",taxonomy$Taxon)
+taxonomy$Taxon<-gsub("p__","D_1__",taxonomy$Taxon)
+taxonomy$Taxon<-gsub("c__","D_2__",taxonomy$Taxon)
+taxonomy$Taxon<-gsub("o__","D_3__",taxonomy$Taxon)
+taxonomy$Taxon<-gsub("f__","D_4__",taxonomy$Taxon)
+taxonomy$Taxon<-gsub("g__","D_5__",taxonomy$Taxon)
+taxonomy$Taxon<-gsub("s__","D_6__",taxonomy$Taxon)
+#taxonomy$Taxon<-sub("D_6__.+? ","D_6__",taxonomy$Taxon)
+
+
+taxonomy$`Feature ID`<-gsub('\\*',"a",taxonomy$`Feature ID`)
 
 write.table(taxonomy,file="taxonomy.tsv",sep="\t",quote=F,row.names=F)
 
 metadata <- data.table::fread("metadata_PRJNA277905.txt")
+
 dataMetagenomics <- subset(
   data,sample%in%subset(metadata,library_selection=="RANDOM")$run_accession)
+
+metadata <- metadata[,c(5,1:4,6:19)]
+colnames(metadata)[1]<-"sample-id"
+write.table(metadata,file="metadata.tsv",sep="\t",quote=F,row.names=F)
 
 dataLong<-dataMetagenomics[,c("taxa_id","read_count","sample")]
 dataWide<-spread(dataLong,value="read_count",key = "sample",fill=0)

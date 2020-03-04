@@ -10,7 +10,19 @@ qiime tools import \
   --type 'FeatureTable[Frequency]' \
   --input-format BIOMV210Format \
   --output-path otu.qza
-  
+
+qiime taxa barplot --i-table otu.qza \
+  --i-taxonomy taxonomy.qza \
+  --o-visualization otu.qzv \
+  --m-metadata-file metadata.tsv 
+
+qiime micom db \
+  --m-meta-file embl.tsv \
+  --p-folder embl_models/ \
+  --p-rank species \
+  --p-threads 32 \
+  --o-metabolic-models embl_models.qza \
+  --verbose
   
 qiime micom build --i-abundance otu.qza \
 	--i-taxonomy taxonomy.qza \
@@ -56,3 +68,6 @@ qiime micom fit-phenotype --i-results growth.qza \
 	--m-metadata-file metadata.tsv \
 	--m-metadata-column status \
 	--o-visualization fit.qzv
+	
+# Check contamination in samples	
+seqtk sample data/SRR1950722_1.fastq.gz 20 
