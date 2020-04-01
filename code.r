@@ -1,6 +1,8 @@
 library(tidyr)
 library(taRifx)
 library(taxonomizr)
+library(data.table)
+
 
 data<-c()
 for(i in dir(path="slimm/")){
@@ -27,8 +29,6 @@ taxonomy$Taxon<-gsub("s__","D_6__",taxonomy$Taxon)
 
 taxonomy$`Feature ID`<-gsub('\\*',"a",taxonomy$`Feature ID`)
 
-write.table(taxonomy,file="taxonomy.tsv",sep="\t",quote=F,row.names=F)
-
 metadata <- data.table::fread("metadata_PRJNA277905.txt")
 
 dataMetagenomics <- subset(
@@ -44,9 +44,19 @@ dataWide<-data.frame(dataWide)
 dataWide[dataWide=="9218868437227407266"]<-0
 dataWide<-japply( dataWide, which(sapply(dataWide, class)!="character"), as.numeric )
 colnames(dataWide)[1]<-"OTU ID"
+
+dataFrac<-(t(t(dataWide[,-1])/colSums(dataWide[,-1],na.rm=T)))
+dataFrac<-cbind(dataWide[,1],dataFrac)
+dataModel<-(dataFrac[rowSums(dataFrac[,-1]>0.00)>=5,])
+
+taxonomy<-taxonomy[taxonomy$`Feature ID` %in% dataModel$`OTU ID`,]
+
+write.table(taxonomy,file="taxonomy.tsv",sep="\t",quote=F,row.names=F)
 write.table(file="otu.tsv",dataWide,row.names=F,quote=F,sep="\t")
 
-
+# biom convert --to-hdf5 --table-type="OTU table" -i otu.tsv  -o otu.biom
+# qiime tools import --input-path otu.biom --type 'FeatureTable[Frequency]' --input-format BIOMV210Format --output-path otu.qza
+# qiime tools import --type FeatureData[Taxonomy] --input-path taxonomy.tsv --output-path taxonomy.qza
 
 modelsMetadata<-data.table::fread("embl_gems/model_list.tsv")
 modelsMetadata$file_path<-sapply(strsplit(modelsMetadata$file_path,"/"),`[`,4)
