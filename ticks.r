@@ -24,7 +24,6 @@ wunifrac_dist = phyloseq::distance(ps.rarefied, method="unifrac", weighted=F)
 ordination = ordinate(ps.rarefied, method="PCoA", distance=wunifrac_dist)
 plot_ordination(ps.rarefied, ordination, color="Sex") + theme(aspect.ratio=1)
 plot_ordination(ps.rarefied, ordination, color="Host") + theme(aspect.ratio=1)
-ds = phyloseq_to_deseq2(ps, ~ Season)
 ds = phyloseq_to_deseq2(ps, ~ Host)
 ds = DESeq(ds)
 ds = DESeq(ds)
@@ -46,14 +45,14 @@ ggplot(res_sig, aes(x=Genus, y=log2FoldChange, color=Phylum)) +
 geom_jitter(size=3, width = 0.2) +
 theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5))
 
-write.table(res_sig,file="Ticks_stats.txt",sep=",",row.names = F,quote=F)
+#write.table(res_sig,file="Ticks_stats.txt",sep=",",row.names = F,quote=F)
 
 alpha=0.05
 res = results(ds, contrast=c("Host","Bos taurus","Equus caballus"),alpha = alpha)
 res = res[order(res$padj, na.last=NA), ]
 res_sig = cbind(as(res, "data.frame"), as(tax_table(ps)[rownames(res), ], "matrix"))
 
-write.table(res_sig,file="Ticks_stats.txt",sep=",",row.names = F,quote=F)
+#write.table(res_sig,file="Ticks_stats.txt",sep=",",row.names = F,quote=F)
 
 ggplot(res_sig, aes(x=Genus, y=log2FoldChange, color=Phylum)) +
 geom_jitter(size=3, width = 0.2) +
@@ -75,4 +74,5 @@ theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5))
 sample_data(ps)
 plot_heatmap(ps.phylum,"NMDS","bray","Host","Phylum")
 bacteroidetes<-subset_taxa(ps.rarefied,Phylum=="Bacteroidetes")
+species<-tax_glom(ps.rarefied,taxrank = "Species")
 plot_tree(species,color="Host",size="abundance",shape="Sex",label.tips = "Genus")
