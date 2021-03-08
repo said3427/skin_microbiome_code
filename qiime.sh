@@ -1,3 +1,27 @@
+kraken2-build --download-library archaea --db krakendb
+kraken2-build --download-library bacteria --db krakendb
+kraken2-build --download-library plasmid --db krakendb
+kraken2-build --download-library viral --db krakendb
+kraken2-build --download-library fungi --db krakendb
+
+ls *R1* | cut -d . -f 1 |cut -d _ -f 1| sort | uniq \
+    | while read sample; do
+python /home/said/anaconda3/envs/qiime2-2020.2/bin/metaphlan2.py \
+ qc/"$sample"_1_val_1.fq.gz,qc/"$sample"_2_val_2.fq.gz \
+ --bowtie2out bowtie/"$sample".bowtie2.bz2 \
+ --nproc 32 \
+ --input_type fastq  > metaphlan2/"$sample".profiled_metagenome.txt;
+done;
+
+
+ls *R1* | cut -d . -f 1 |cut -d _ -f 1| sort | uniq \
+    | while read sample; do
+spades.py --meta \
+ -1 qc/"$sample"_1_val_1.fq.gz  -2 qc/"$sample"_2_val_2.fq.gz \
+ -t 32 \
+ -o spades/"$sample" ;
+done;
+
 qiime tools import \
   --type FeatureData[Taxonomy] \
   --input-path taxonomy.tsv \
@@ -23,7 +47,7 @@ qiime micom db \
   --p-threads 32 \
   --o-metabolic-models embl_models.qza \
   --verbose
-  
+
 qiime micom build --i-abundance otu.qza \
 	--i-taxonomy taxonomy.qza \
 	--i-models embl_models.qza \
